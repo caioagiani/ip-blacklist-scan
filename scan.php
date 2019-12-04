@@ -55,15 +55,13 @@ if (!is_array($json)) die(json_encode(array('status' => false, 'return' => TOKEN
 
 if ($json['score'] === 0) die(json_encode(array('status' => true, 'return' => $ip . ' not found blacklist hole')));
 
-foreach ($json as $key => $value) 
-{
+foreach ($json as $key => $value) {
     $num = is_array($value) ? count($value) : 0;
 }
 
 $dados = [];
 
-foreach ($obj['fullip']['history']['activity'] as $key => $value) 
-{
+foreach ($obj['fullip']['history']['activity'] as $key => $value) {
     array_push($dados, $value);
 }
 
