@@ -11,8 +11,7 @@ extract($_GET);
 if (!isset($_GET['ip'])) die(json_encode((array('status' => false, 'return' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '?ip=198.46.178.97'))));
 
 define('WEBSITE', 'https://api.apility.net/v2.0/ip/' . $ip . '?items=100'); // define default url api adress
-define('TOKEN', '56deba52-9052-4b99-a0fb-3df0dce54d57'); // set your toke account
-//743fbefa-3674-49d0-98b3-a3fffda60657
+define('TOKEN', '56deba52-9052-4b99-a0fb-3df0dce54d57'); // set your token account { 743fbefa-3674-49d0-98b3-a3fffda60657 } 
 
 if (!filter_var($ip, FILTER_VALIDATE_IP)) die(json_encode(array('status' => false, 'return' => 'IP address invalid')));
 
@@ -56,14 +55,15 @@ if (!is_array($json)) die(json_encode(array('status' => false, 'return' => TOKEN
 
 if ($json['score'] === 0) die(json_encode(array('status' => true, 'return' => $ip . ' not found blacklist hole')));
 
-foreach ($json as $key => $value) {
+foreach ($json as $key => $value) 
+{
     $num = is_array($value) ? count($value) : 0;
 }
 
 $dados = [];
 
-foreach ($obj['fullip']['history']['activity'] as $key => $value) {
-
+foreach ($obj['fullip']['history']['activity'] as $key => $value) 
+{
     array_push($dados, $value);
 }
 
