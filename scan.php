@@ -1,91 +1,70 @@
-    <?php
+<?php
 
-    /** 
-     * Author: Caio Agiani
-     * Description: IP Blacklist abuse scan
-     * Website: https://apility.io
-     */
+/** 
+ * Author: Caio Agiani
+ * Description: IP Blacklist abuse scan
+ * Website: https://apility.io
+ */
 
-    extract($_GET);
+extract($_GET);
 
-    if (!isset($_GET['ip'])) die('Use: ' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '?ip=198.46.178.97');
+if (!isset($_GET['ip'])) die(json_encode((array('status' => false, 'return' => $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '?ip=198.46.178.97'))));
 
-    define('WEBSITE', 'https://api.apility.net/v2.0/ip/' . $ip . '?items=100'); // define default url api adress
-    define('TOKEN', '56deba52-9052-4b99-a0fb-3df0dce54d57'); // set your toke account
-    //743fbefa-3674-49d0-98b3-a3fffda60657
+define('WEBSITE', 'https://api.apility.net/v2.0/ip/' . $ip . '?items=100'); // define default url api adress
+define('TOKEN', '56deba52-9052-4b99-a0fb-3df0dce54d57'); // set your toke account
+//743fbefa-3674-49d0-98b3-a3fffda60657
 
-    if (!filter_var($ip, FILTER_VALIDATE_IP)) die('IP Adress invalid');
+if (!filter_var($ip, FILTER_VALIDATE_IP)) die(json_encode(array('status' => false, 'return' => 'IP address invalid')));
 
-    class iPScan
+class iPScan
+{
+    static function Acces($url, $post = false, $header = array(''))
     {
-        static function Acces($url, $post = false, $header = array(''))
-        {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-            curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 
-            if ($post) curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+        if ($post) curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
 
-            $data = curl_exec($ch);
-            curl_close($ch);
+        $data = curl_exec($ch);
+        curl_close($ch);
 
-            return $data;
-        }
-
-        function Color($hex, $text)
-        {
-            return '<font class="label label-danger" style="background-color:' . $hex . '">' . $text . '</font>';
-        }
+        return $data;
     }
+}
 
-    $open = new iPScan;
-    $url = $open::Acces(
-        WEBSITE,
-        false,
-        array(
-            'Content-Type: application/json',
-            'X-Auth-Token: ' . TOKEN
-        )
-    );
+$open = new iPScan();
 
-    $obj = json_decode($url, true);
-    $json = $obj['fullip']['badip'];
+$url = $open::Acces(
+    WEBSITE,
+    false,
+    array(
+        'Content-Type: application/json',
+        'X-Auth-Token: ' . TOKEN
+    )
+);
 
-    if (!is_array($json)) die(json_encode(array('status' => false, 'return' => TOKEN . ' invalid token.')));
+$obj = json_decode($url, true);
 
-    if ($json['score'] !== 0) {
-        $msg = '';
+$json = $obj['fullip']['badip'];
 
-        foreach ($json as $key => $value) {
-            $num = is_array($value) ? count($value) : 0;
-        }
+if (!is_array($json)) die(json_encode(array('status' => false, 'return' => TOKEN . ' invalid token.')));
 
-        foreach ($value as $key => $value) {
-            $msg .= ' ' . $open->Color('#FF0000', $value);
-        }
+if ($json['score'] === 0) die(json_encode(array('status' => true, 'return' => $ip . ' not found blacklist hole')));
 
-        echo $ip  . ' - was found in <b>' . $num . '</b> blacklist: <br />' . $msg;
-    } else {
-        echo $ip . ' - ' . $open->Color('#00FF00', 'not found') . ' blacklist';
-    }
+foreach ($json as $key => $value) {
+    $num = is_array($value) ? count($value) : 0;
+}
 
-    if ($obj['fullip']['history']['score'] !== 0) {
+$dados = [];
 
-        echo "<hr />IP address historic information: <br />";
+foreach ($obj['fullip']['history']['activity'] as $key => $value) {
 
-        foreach ($obj['fullip']['history']['activity'] as $key => $value) {
-            echo "<pre />";
+    array_push($dados, $value);
+}
 
-            $cmd = $value['command'];
-            $blacklist = $value['blacklists'] ? $value['blacklists'] : $value['blacklist_change']'';
-
-            $final = str_replace('add', '<b>[+]</b> ' . $open->Color('#FF0000', 'IP was added to blacklist(s)'), $cmd . ' -> [' . $blacklist . ']');
-            echo $final = str_replace('rem', '<b>[-]</b> ' . $open->Color('#00FF00', 'IP was removed from blacklist(s)'), $final) . '<br />';
-        }
-    } else {
-        echo '<hr />IP address historic information: ' . $open->Color('#00FF00', '0');
-    }
+echo json_encode(array('status' => true, $ip  . ' - was found in ' . $num . ' blacklist', 'info' => $dados));
